@@ -563,247 +563,251 @@ Parvus.Utilities.NewThreadLoop(FrameRate,function()
     end
 end)
 
-Parvus.Utilities.NewThreadLoop(FrameRate,function()
-    for Target,ESP in pairs(DrawingLibrary.ESP) do
-        ESP.Target.Character,ESP.Target.RootPart = GetCharacter(Target,ESP.Mode)
-        if ESP.Target.Character and ESP.Target.RootPart then
-            ESP.Target.ScreenPosition,ESP.Target.OnScreen = WorldToScreen(ESP.Target.RootPart.Position)
+local LocalPlayer = game.Players.LocalPlayer -- Replace with the appropriate way to get the local player
 
-            --[[ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
-            ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.Flag,"/Distance"),ESP.Target.Distance)
-            ESP.Target.Health,ESP.Target.MaxHealth,ESP.Target.IsAlive = GetHealth(Target,ESP.Target.Character,ESP.Mode)
-            ESP.Target.InEnemyTeam,ESP.Target.TeamColor = GetTeam(Target,ESP.Target.Character,ESP.Mode)
-            ESP.Target.Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and ESP.Target.TeamColor
-            or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
-            or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])]]
-
-            if ESP.Target.OnScreen then
-                ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
-                ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.Flag,"/Distance"),ESP.Target.Distance)
-                if ESP.Target.InTheRange then
-                    ESP.Target.Health,ESP.Target.MaxHealth,ESP.Target.IsAlive = GetHealth(Target,ESP.Target.Character,ESP.Mode)
-                    ESP.Target.InEnemyTeam,ESP.Target.TeamColor = GetTeam(Target,ESP.Target.Character,ESP.Mode)
-                    ESP.Target.Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and ESP.Target.TeamColor
-                    or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
-                    or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])
-
-                    if ESP.Highlight and ESP.Highlight.Enabled then
-                        local OutlineColor = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/OutlineColor")
-                        ESP.Highlight.DepthMode = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Occluded")
-                        and Enum.HighlightDepthMode.Occluded or Enum.HighlightDepthMode.AlwaysOnTop
-                        --ESP.Highlight.Adornee = ESP.Target.Character
-                        ESP.Highlight.FillColor = ESP.Target.Color
-                        ESP.Highlight.OutlineColor = OutlineColor[6]
-                        ESP.Highlight.OutlineTransparency = OutlineColor[4]
-                        ESP.Highlight.FillTransparency = GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Transparency")
-                    end
-                    if ESP.RESP.Tracer.Visible or ESP.RESP.HeadDot.Visible then
-                        local Head = FindFirstChild(ESP.Target.Character,"Head",true)
-                        if Head then local HeadPosition = WorldToScreen(Head.Position)
-                            if ESP.RESP.Tracer.Visible then
-                                local Mode = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Mode")
-                                local Outline = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Outline")
-                                local Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Thickness")
-                                local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Transparency")
-                                Mode = (Mode[1] == "From Mouse" and UserInputService:GetMouseLocation())
-                                or (Mode[1] == "From Bottom" and V2New(Camera.ViewportSize.X / 2,Camera.ViewportSize.Y))
-                                local Position,Rotation,Size = CalculateLine(HeadPosition,Mode,Thickness)
-
-                                ESP.RESP.Tracer.BorderSizePixel = Outline and 1 or 0
-                                ESP.RESP.Tracer.BackgroundTransparency = Transparency
-                                ESP.RESP.Tracer.BackgroundColor3 = ESP.Target.Color
-                                ESP.RESP.Tracer.Rotation = Rotation
-                                ESP.RESP.Tracer.Position = Position
-                                ESP.RESP.Tracer.Size = Size
-                            end
-                            if ESP.RESP.HeadDot.Visible then
-                                local Size = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Size")
-                                local Outline = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Outline")
-                                local Autoscale = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Autoscale")
-                                local Smoothness = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Smoothness")
-                                local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Transparency")
-                                Autoscale = ClampDistance(Autoscale,Size,ESP.Target.Distance)
-                                Outline = Outline and Transparency or 1
-
-                                ESP.RESP.HeadDot.Stroke.Transparency = Outline
-                                ESP.RESP.HeadDot.BackgroundColor3 = ESP.Target.Color
-                                ESP.RESP.HeadDot.BackgroundTransparency = Transparency
-                                ESP.RESP.HeadDot.Corner.CornerRadius = UDimNew(Smoothness / 100,0)
-                                ESP.RESP.HeadDot.Size = UDim2FromOffset(Autoscale,Autoscale)
-                                ESP.RESP.HeadDot.Position = ToUDim2(HeadPosition)
-                            end
-                        end
-                    end
-                    if ESP.RESP.Box.Visible then
-                        local BoxPosition,BoxSize = CalculateBox(ESP.Target.Character,ESP.Target.ScreenPosition,ESP.Target.Distance)
-                        ESP.Target.HealthPercent = ESP.Target.Health / ESP.Target.MaxHealth ESP.Target.BoxTooSmall = BoxSize.Y <= 12
-                        ESP.Target.Weapon = GetWeapon(Target,ESP.Target.Character,ESP.Mode)
-
-                        local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Box/Transparency")
-                        local CornerSize = GetFlag(ESP.Flags,ESP.Flag,"/Box/Corners/Size")
-                        local Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Box/Thickness")
-                        local Outline = GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline")
-                        local Filled = GetFlag(ESP.Flags,ESP.Flag,"/Box/Filled")
-                        Outline = Outline and Transparency or 1
-                        CornerSize = (CornerSize / 100) / 2
-
-                        ESP.RESP.Box.BackgroundTransparency = Filled and Transparency or 1
-                        ESP.RESP.Box.BackgroundColor3 = ESP.Target.Color
-
-                        ESP.RESP.Box.Corners.Top.Left.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Top.Left.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Top.Left.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Top.Left.Size = UDim2New(CornerSize,0,0,Thickness)
-
-                        ESP.RESP.Box.Corners.Top.Right.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Top.Right.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Top.Right.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Top.Right.Size = UDim2New(CornerSize,0,0,Thickness)
-
-                        ESP.RESP.Box.Corners.Left.Top.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Left.Top.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Left.Top.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Left.Top.Position = UDim2New(0,0,0,-Thickness)
-                        ESP.RESP.Box.Corners.Left.Top.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
-
-                        ESP.RESP.Box.Corners.Left.Bottom.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Left.Bottom.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Left.Bottom.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Left.Bottom.Position = UDim2New(0,0,1,Thickness)
-                        ESP.RESP.Box.Corners.Left.Bottom.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
-
-                        ESP.RESP.Box.Corners.Bottom.Left.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Bottom.Left.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Bottom.Left.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Bottom.Left.Size = UDim2New(CornerSize,0,0,Thickness)
-
-                        ESP.RESP.Box.Corners.Bottom.Right.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Bottom.Right.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Bottom.Right.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Bottom.Right.Size = UDim2New(CornerSize,0,0,Thickness)
-
-                        ESP.RESP.Box.Corners.Right.Top.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Right.Top.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Right.Top.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Right.Top.Position = UDim2New(1,0,0,-Thickness)
-                        ESP.RESP.Box.Corners.Right.Top.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
-
-                        ESP.RESP.Box.Corners.Right.Bottom.Border.BackgroundTransparency = Outline
-                        ESP.RESP.Box.Corners.Right.Bottom.BackgroundTransparency = Transparency
-                        ESP.RESP.Box.Corners.Right.Bottom.BackgroundColor3 = ESP.Target.Color
-                        ESP.RESP.Box.Corners.Right.Bottom.Position = UDim2New(1,0,1,Thickness)
-                        ESP.RESP.Box.Corners.Right.Bottom.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
-
-                        ESP.RESP.Box.Position = ToUDim2(BoxPosition)
-                        ESP.RESP.Box.Size = ToUDim2(BoxSize)
-
-                        if ESP.RESP.Box.HealthBar.Visible and not ESP.Target.BoxTooSmall then
-                            ESP.RESP.Box.HealthBar.Stroke.Transparency = Outline
-                            ESP.RESP.Box.HealthBar.Position = UDim2New(0,-(Thickness + 3),0.5,0)
-                            ESP.RESP.Box.HealthBar.Size = UDim2New(0,Thickness,1,Thickness * 2)
-                            ESP.RESP.Box.HealthBar.Health.BackgroundTransparency = Transparency
-                            ESP.RESP.Box.HealthBar.Health.Size = UDim2New(1,0,ESP.Target.HealthPercent,0)
-                            ESP.RESP.Box.HealthBar.Health.BackgroundColor3 = EvalHealth(ESP.Target.HealthPercent)
-                        end
-
-                        if ESP.RESP.Box.TextLists.Top.Title.Visible
-                        or ESP.RESP.Box.TextLists.Left.Health.Visible
-                        or ESP.RESP.Box.TextLists.Bottom.Distance.Visible
-                        or ESP.RESP.Box.TextLists.Right.Weapon.Visible then
-                            local Size = GetFlag(ESP.Flags,ESP.Flag,"/Name/Size")
-                            local Autoscale = GetFlag(ESP.Flags,ESP.Flag,"/Name/Autoscale")
-                            Autoscale = ClampDistance(Autoscale,Size,ESP.Target.Distance)
-
-                            Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Name/Transparency")
-                            Outline = GetFlag(ESP.Flags,ESP.Flag,"/Name/Outline")
-                            Outline = Outline and math.min(Transparency,0.5) or 1
-
-                            ESP.RESP.Box.TextLists.Top.Position = UDim2New(0.5,0,0,-(Thickness + 3))
-                            ESP.RESP.Box.TextLists.Left.Position = UDim2New(0,-(Thickness * 2 + 6),0.5,0)
-                            ESP.RESP.Box.TextLists.Bottom.Position = UDim2New(0.5,0,1,Thickness + 3)
-                            ESP.RESP.Box.TextLists.Right.Position = UDim2New(1,Thickness + 3,0.5,0)
-
-                            if ESP.RESP.Box.TextLists.Top.Title.Visible then
-                                ESP.RESP.Box.TextLists.Top.Title.TextSize = Autoscale
-                                ESP.RESP.Box.TextLists.Top.Title.Size = UDim2New(1,0,0,Autoscale)
-                                ESP.RESP.Box.TextLists.Top.Title.TextTransparency = Transparency
-                                ESP.RESP.Box.TextLists.Top.Title.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.TextLists.Top.Title.Text = ESP.Mode == "Player" and Target.Name
-                                or (ESP.Target.InEnemyTeam and "Enemy NPC" or "Ally NPC")
-                            end
-                            if ESP.RESP.Box.TextLists.Left.Health.Visible then
-                                ESP.RESP.Box.TextLists.Left.Health.TextSize = Autoscale
-                                ESP.RESP.Box.TextLists.Left.Health.Size = UDim2New(1,0,0,Autoscale)
-                                ESP.RESP.Box.TextLists.Left.Health.TextTransparency = Transparency
-                                ESP.RESP.Box.TextLists.Left.Health.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.TextLists.Left.Health.Text = tostring(math.floor(ESP.Target.HealthPercent * 100)) .. "%"
-                            end
-                            if ESP.RESP.Box.TextLists.Bottom.Distance.Visible then
-                                ESP.RESP.Box.TextLists.Bottom.Distance.TextSize = Autoscale
-                                ESP.RESP.Box.TextLists.Bottom.Distance.Size = UDim2New(1,0,0,Autoscale)
-                                ESP.RESP.Box.TextLists.Bottom.Distance.TextTransparency = Transparency
-                                ESP.RESP.Box.TextLists.Bottom.Distance.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.TextLists.Bottom.Distance.Text = tostring(math.floor(ESP.Target.Distance)) .. " studs"
-                            end
-                            if ESP.RESP.Box.TextLists.Right.Weapon.Visible then
-                                ESP.RESP.Box.TextLists.Right.Weapon.TextSize = Autoscale
-                                ESP.RESP.Box.TextLists.Right.Weapon.Size = UDim2New(1,0,0,Autoscale)
-                                ESP.RESP.Box.TextLists.Right.Weapon.TextTransparency = Transparency
-                                ESP.RESP.Box.TextLists.Right.Weapon.TextStrokeTransparency = Outline
-                                ESP.RESP.Box.TextLists.Right.Weapon.Text = ESP.Target.Weapon
-                            end
-                        end
-                    end
-                end
-            else
-                if ESP.RESP.Arrow.Left.Visible and ESP.RESP.Arrow.Right.Visible then
+Parvus.Utilities.NewThreadLoop(FrameRate, function()
+    for Target, ESP in pairs(DrawingLibrary.ESP) do
+        ESP.Target.Character, ESP.Target.RootPart = GetCharacter(Target, ESP.Mode)
+        
+        -- Exclude local player from being considered as a target
+        if Target ~= LocalPlayer then
+            if ESP.Target.Character and ESP.Target.RootPart then
+                ESP.Target.ScreenPosition, ESP.Target.OnScreen = WorldToScreen(ESP.Target.RootPart.Position)
+                
+                if ESP.Target.OnScreen then
                     ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
-                    ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags,ESP.Flag,"/DistanceCheck"),GetFlag(ESP.Flags,ESP.Flag,"/Distance"),ESP.Target.Distance)
-                    ESP.Target.Health,ESP.Target.MaxHealth,ESP.Target.IsAlive = GetHealth(Target,ESP.Target.Character,ESP.Mode)
-                    ESP.Target.InEnemyTeam,ESP.Target.TeamColor = GetTeam(Target,ESP.Target.Character,ESP.Mode)
-                    ESP.Target.Color = GetFlag(ESP.Flags,ESP.Flag,"/TeamColor") and ESP.Target.TeamColor
-                    or (ESP.Target.InEnemyTeam and GetFlag(ESP.Flags,ESP.Flag,"/Enemy")[6]
-                    or GetFlag(ESP.Flags,ESP.Flag,"/Ally")[6])
-
-                    local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Transparency")
-                    local Direction = GetRelative(ESP.Target.RootPart.Position).Unit
-                    local SideLength = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Width") / 2
-                    local ArrowRadius = GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Radius")
-                    local Base,Radians90 = Direction * ArrowRadius,Rad(90)
-
-                    local RTCBL = RelativeToCenter(Base + RotateVector(Direction,Radians90) * SideLength)
-                    local RTCT = RelativeToCenter(Direction * (ArrowRadius + GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Height")))
-                    local RTCBR = RelativeToCenter(Base + RotateVector(Direction,-Radians90) * SideLength)
-
-                    ESP.RESP.Arrow.Left.ImageColor3 = ESP.Target.Color
-                    ESP.RESP.Arrow.Right.ImageColor3 = ESP.Target.Color
-                    ESP.RESP.Arrow.Left.ImageTransparency = Transparency
-                    ESP.RESP.Arrow.Right.ImageTransparency = Transparency
-
-                    CalculateTriangle(ESP.RESP.Arrow.Left,ESP.RESP.Arrow.Right,RTCBL,RTCT,RTCBR)
+                    ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags, ESP.Flag, "/DistanceCheck"), GetFlag(ESP.Flags, ESP.Flag, "/Distance"), ESP.Target.Distance)
+                    
+                    if ESP.Target.InTheRange then
+                        ESP.Target.Health, ESP.Target.MaxHealth, ESP.Target.IsAlive = GetHealth(Target, ESP.Target.Character, ESP.Mode)
+                        ESP.Target.InEnemyTeam, ESP.Target.TeamColor = GetTeam(Target, ESP.Target.Character, ESP.Mode)
+                        
+                        -- Improve team check logic
+                        if ESP.Target.InEnemyTeam then
+                            ESP.Target.Color = GetFlag(ESP.Flags, ESP.Flag, "/TeamColor") and ESP.Target.TeamColor or GetFlag(ESP.Flags, ESP.Flag, "/Enemy")[6]
+                        else
+                            ESP.Target.Color = GetFlag(ESP.Flags, ESP.Flag, "/TeamColor") and ESP.Target.TeamColor or GetFlag(ESP.Flags, ESP.Flag, "/Ally")[6]
+                        end
+                        
+                        if ESP.Highlight and ESP.Highlight.Enabled then
+                            local OutlineColor = GetFlag(ESP.Flags, ESP.Flag, "/Highlight/OutlineColor")
+                            ESP.Highlight.DepthMode = GetFlag(ESP.Flags, ESP.Flag, "/Highlight/Occluded") and Enum.HighlightDepthMode.Occluded or Enum.HighlightDepthMode.AlwaysOnTop
+                            ESP.Highlight.FillColor = ESP.Target.Color
+                            ESP.Highlight.OutlineColor = OutlineColor[6]
+                            ESP.Highlight.OutlineTransparency = OutlineColor[4]
+                            ESP.Highlight.FillTransparency = GetFlag(ESP.Flags, ESP.Flag, "/Highlight/Transparency")
+                        end
+                        
+                        if ESP.RESP.Tracer.Visible or ESP.RESP.HeadDot.Visible then
+                            local Head = FindFirstChild(ESP.Target.Character,"Head",true)
+                            if Head then local HeadPosition = WorldToScreen(Head.Position)
+                                if ESP.RESP.Tracer.Visible then
+                                    local Mode = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Mode")
+                                    local Outline = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Outline")
+                                    local Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Thickness")
+                                    local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Transparency")
+                                    Mode = (Mode[1] == "From Mouse" and UserInputService:GetMouseLocation())
+                                    or (Mode[1] == "From Bottom" and V2New(Camera.ViewportSize.X / 2,Camera.ViewportSize.Y))
+                                    local Position,Rotation,Size = CalculateLine(HeadPosition,Mode,Thickness)
+    
+                                    ESP.RESP.Tracer.BorderSizePixel = Outline and 1 or 0
+                                    ESP.RESP.Tracer.BackgroundTransparency = Transparency
+                                    ESP.RESP.Tracer.BackgroundColor3 = ESP.Target.Color
+                                    ESP.RESP.Tracer.Rotation = Rotation
+                                    ESP.RESP.Tracer.Position = Position
+                                    ESP.RESP.Tracer.Size = Size
+                                end
+                                if ESP.RESP.HeadDot.Visible then
+                                    local Size = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Size")
+                                    local Outline = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Outline")
+                                    local Autoscale = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Autoscale")
+                                    local Smoothness = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Smoothness")
+                                    local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Transparency")
+                                    Autoscale = ClampDistance(Autoscale,Size,ESP.Target.Distance)
+                                    Outline = Outline and Transparency or 1
+    
+                                    ESP.RESP.HeadDot.Stroke.Transparency = Outline
+                                    ESP.RESP.HeadDot.BackgroundColor3 = ESP.Target.Color
+                                    ESP.RESP.HeadDot.BackgroundTransparency = Transparency
+                                    ESP.RESP.HeadDot.Corner.CornerRadius = UDimNew(Smoothness / 100,0)
+                                    ESP.RESP.HeadDot.Size = UDim2FromOffset(Autoscale,Autoscale)
+                                    ESP.RESP.HeadDot.Position = ToUDim2(HeadPosition)
+                                end
+                            end
+                        end
+                        if ESP.RESP.Box.Visible then
+                            local BoxPosition,BoxSize = CalculateBox(ESP.Target.Character,ESP.Target.ScreenPosition,ESP.Target.Distance)
+                            ESP.Target.HealthPercent = ESP.Target.Health / ESP.Target.MaxHealth ESP.Target.BoxTooSmall = BoxSize.Y <= 12
+                            ESP.Target.Weapon = GetWeapon(Target,ESP.Target.Character,ESP.Mode)
+    
+                            local Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Box/Transparency")
+                            local CornerSize = GetFlag(ESP.Flags,ESP.Flag,"/Box/Corners/Size")
+                            local Thickness = GetFlag(ESP.Flags,ESP.Flag,"/Box/Thickness")
+                            local Outline = GetFlag(ESP.Flags,ESP.Flag,"/Box/Outline")
+                            local Filled = GetFlag(ESP.Flags,ESP.Flag,"/Box/Filled")
+                            Outline = Outline and Transparency or 1
+                            CornerSize = (CornerSize / 100) / 2
+    
+                            ESP.RESP.Box.BackgroundTransparency = Filled and Transparency or 1
+                            ESP.RESP.Box.BackgroundColor3 = ESP.Target.Color
+    
+                            ESP.RESP.Box.Corners.Top.Left.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Top.Left.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Top.Left.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Top.Left.Size = UDim2New(CornerSize,0,0,Thickness)
+    
+                            ESP.RESP.Box.Corners.Top.Right.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Top.Right.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Top.Right.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Top.Right.Size = UDim2New(CornerSize,0,0,Thickness)
+    
+                            ESP.RESP.Box.Corners.Left.Top.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Left.Top.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Left.Top.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Left.Top.Position = UDim2New(0,0,0,-Thickness)
+                            ESP.RESP.Box.Corners.Left.Top.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
+    
+                            ESP.RESP.Box.Corners.Left.Bottom.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Left.Bottom.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Left.Bottom.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Left.Bottom.Position = UDim2New(0,0,1,Thickness)
+                            ESP.RESP.Box.Corners.Left.Bottom.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
+    
+                            ESP.RESP.Box.Corners.Bottom.Left.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Bottom.Left.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Bottom.Left.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Bottom.Left.Size = UDim2New(CornerSize,0,0,Thickness)
+    
+                            ESP.RESP.Box.Corners.Bottom.Right.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Bottom.Right.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Bottom.Right.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Bottom.Right.Size = UDim2New(CornerSize,0,0,Thickness)
+    
+                            ESP.RESP.Box.Corners.Right.Top.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Right.Top.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Right.Top.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Right.Top.Position = UDim2New(1,0,0,-Thickness)
+                            ESP.RESP.Box.Corners.Right.Top.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
+    
+                            ESP.RESP.Box.Corners.Right.Bottom.Border.BackgroundTransparency = Outline
+                            ESP.RESP.Box.Corners.Right.Bottom.BackgroundTransparency = Transparency
+                            ESP.RESP.Box.Corners.Right.Bottom.BackgroundColor3 = ESP.Target.Color
+                            ESP.RESP.Box.Corners.Right.Bottom.Position = UDim2New(1,0,1,Thickness)
+                            ESP.RESP.Box.Corners.Right.Bottom.Size = UDim2New(0,Thickness,CornerSize,Thickness * 2)
+    
+                            ESP.RESP.Box.Position = ToUDim2(BoxPosition)
+                            ESP.RESP.Box.Size = ToUDim2(BoxSize)
+    
+                            if ESP.RESP.Box.HealthBar.Visible and not ESP.Target.BoxTooSmall then
+                                ESP.RESP.Box.HealthBar.Stroke.Transparency = Outline
+                                ESP.RESP.Box.HealthBar.Position = UDim2New(0,-(Thickness + 3),0.5,0)
+                                ESP.RESP.Box.HealthBar.Size = UDim2New(0,Thickness,1,Thickness * 2)
+                                ESP.RESP.Box.HealthBar.Health.BackgroundTransparency = Transparency
+                                ESP.RESP.Box.HealthBar.Health.Size = UDim2New(1,0,ESP.Target.HealthPercent,0)
+                                ESP.RESP.Box.HealthBar.Health.BackgroundColor3 = EvalHealth(ESP.Target.HealthPercent)
+                            end
+    
+                            if ESP.RESP.Box.TextLists.Top.Title.Visible
+                            or ESP.RESP.Box.TextLists.Left.Health.Visible
+                            or ESP.RESP.Box.TextLists.Bottom.Distance.Visible
+                            or ESP.RESP.Box.TextLists.Right.Weapon.Visible then
+                                local Size = GetFlag(ESP.Flags,ESP.Flag,"/Name/Size")
+                                local Autoscale = GetFlag(ESP.Flags,ESP.Flag,"/Name/Autoscale")
+                                Autoscale = ClampDistance(Autoscale,Size,ESP.Target.Distance)
+    
+                                Transparency = GetFlag(ESP.Flags,ESP.Flag,"/Name/Transparency")
+                                Outline = GetFlag(ESP.Flags,ESP.Flag,"/Name/Outline")
+                                Outline = Outline and math.min(Transparency,0.5) or 1
+    
+                                ESP.RESP.Box.TextLists.Top.Position = UDim2New(0.5,0,0,-(Thickness + 3))
+                                ESP.RESP.Box.TextLists.Left.Position = UDim2New(0,-(Thickness * 2 + 6),0.5,0)
+                                ESP.RESP.Box.TextLists.Bottom.Position = UDim2New(0.5,0,1,Thickness + 3)
+                                ESP.RESP.Box.TextLists.Right.Position = UDim2New(1,Thickness + 3,0.5,0)
+    
+                                if ESP.RESP.Box.TextLists.Top.Title.Visible then
+                                    ESP.RESP.Box.TextLists.Top.Title.TextSize = Autoscale
+                                    ESP.RESP.Box.TextLists.Top.Title.Size = UDim2New(1,0,0,Autoscale)
+                                    ESP.RESP.Box.TextLists.Top.Title.TextTransparency = Transparency
+                                    ESP.RESP.Box.TextLists.Top.Title.TextStrokeTransparency = Outline
+                                    ESP.RESP.Box.TextLists.Top.Title.Text = ESP.Mode == "Player" and Target.Name
+                                    or (ESP.Target.InEnemyTeam and "Enemy NPC" or "Ally NPC")
+                                end
+                                if ESP.RESP.Box.TextLists.Left.Health.Visible then
+                                    ESP.RESP.Box.TextLists.Left.Health.TextSize = Autoscale
+                                    ESP.RESP.Box.TextLists.Left.Health.Size = UDim2New(1,0,0,Autoscale)
+                                    ESP.RESP.Box.TextLists.Left.Health.TextTransparency = Transparency
+                                    ESP.RESP.Box.TextLists.Left.Health.TextStrokeTransparency = Outline
+                                    ESP.RESP.Box.TextLists.Left.Health.Text = tostring(math.floor(ESP.Target.HealthPercent * 100)) .. "%"
+                                end
+                                if ESP.RESP.Box.TextLists.Bottom.Distance.Visible then
+                                    ESP.RESP.Box.TextLists.Bottom.Distance.TextSize = Autoscale
+                                    ESP.RESP.Box.TextLists.Bottom.Distance.Size = UDim2New(1,0,0,Autoscale)
+                                    ESP.RESP.Box.TextLists.Bottom.Distance.TextTransparency = Transparency
+                                    ESP.RESP.Box.TextLists.Bottom.Distance.TextStrokeTransparency = Outline
+                                    ESP.RESP.Box.TextLists.Bottom.Distance.Text = tostring(math.floor(ESP.Target.Distance)) .. " studs"
+                                end
+                                if ESP.RESP.Box.TextLists.Right.Weapon.Visible then
+                                    ESP.RESP.Box.TextLists.Right.Weapon.TextSize = Autoscale
+                                    ESP.RESP.Box.TextLists.Right.Weapon.Size = UDim2New(1,0,0,Autoscale)
+                                    ESP.RESP.Box.TextLists.Right.Weapon.TextTransparency = Transparency
+                                    ESP.RESP.Box.TextLists.Right.Weapon.TextStrokeTransparency = Outline
+                                    ESP.RESP.Box.TextLists.Right.Weapon.Text = ESP.Target.Weapon
+                                end
+                            end
+                        end                       
+                    end
+                else
+                    if ESP.RESP.Arrow.Left.Visible and ESP.RESP.Arrow.Right.Visible then
+                        ESP.Target.Distance = GetDistance(ESP.Target.RootPart.Position)
+                        ESP.Target.InTheRange = CheckDistance(GetFlag(ESP.Flags, ESP.Flag, "/DistanceCheck"), GetFlag(ESP.Flags, ESP.Flag, "/Distance"), ESP.Target.Distance)
+                        ESP.Target.Health, ESP.Target.MaxHealth, ESP.Target.IsAlive = GetHealth(Target, ESP.Target.Character, ESP.Mode)
+                        ESP.Target.InEnemyTeam, ESP.Target.TeamColor = GetTeam(Target, ESP.Target.Character, ESP.Mode)
+                        
+                        -- Improve team check logic
+                        if ESP.Target.InEnemyTeam then
+                            ESP.Target.Color = GetFlag(ESP.Flags, ESP.Flag, "/TeamColor") and ESP.Target.TeamColor or GetFlag(ESP.Flags, ESP.Flag, "/Enemy")[6]
+                        else
+                            ESP.Target.Color = GetFlag(ESP.Flags, ESP.Flag, "/TeamColor") and ESP.Target.TeamColor or GetFlag(ESP.Flags, ESP.Flag, "/Ally")[6]
+                        end
+                        
+                        local Transparency = GetFlag(ESP.Flags, ESP.Flag, "/Arrow/Transparency")
+                        local Direction = GetRelative(ESP.Target.RootPart.Position).Unit
+                        local SideLength = GetFlag(ESP.Flags, ESP.Flag, "/Arrow/Width") / 2
+                        local ArrowRadius = GetFlag(ESP.Flags, ESP.Flag, "/Arrow/Radius")
+                        local Base, Radians90 = Direction * ArrowRadius, Rad(90)
+                        local RTCBL = RelativeToCenter(Base + RotateVector(Direction, Radians90) * SideLength)
+                        local RTCT = RelativeToCenter(Direction * (ArrowRadius + GetFlag(ESP.Flags, ESP.Flag, "/Arrow/Height")))
+                        local RTCBR = RelativeToCenter(Base + RotateVector(Direction, -Radians90) * SideLength)
+                        
+                        ESP.RESP.Arrow.Left.ImageColor3 = ESP.Target.Color
+                        ESP.RESP.Arrow.Right.ImageColor3 = ESP.Target.Color
+                        ESP.RESP.Arrow.Left.ImageTransparency = Transparency
+                        ESP.RESP.Arrow.Right.ImageTransparency = Transparency
+                        
+                        CalculateTriangle(ESP.RESP.Arrow.Left, ESP.RESP.Arrow.Right, RTCBL, RTCT, RTCBR)
+                    end
                 end
             end
         end
-
-        local TeamCheck = (not GetFlag(ESP.Flags,ESP.Flag,"/TeamCheck") and not ESP.Target.InEnemyTeam) or ESP.Target.InEnemyTeam
+        
+        local TeamCheck = (not GetFlag(ESP.Flags, ESP.Flag, "/TeamCheck") and not ESP.Target.InEnemyTeam) or ESP.Target.InEnemyTeam
         local Visible = ESP.Target.RootPart and ESP.Target.OnScreen and ESP.Target.InTheRange and ESP.Target.IsAlive and TeamCheck
         local ArrowVisible = ESP.Target.RootPart and (not ESP.Target.OnScreen) and ESP.Target.InTheRange and ESP.Target.IsAlive and TeamCheck
-
+        
         if ESP.Highlight then
-            ESP.Highlight.Enabled = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Highlight/Enabled") or false
+            ESP.Highlight.Enabled = Visible and GetFlag(ESP.Flags, ESP.Flag, "/Highlight/Enabled") or false
         end
-
-        ESP.RESP.Box.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Box/Enabled") or false
-        ESP.RESP.Tracer.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Tracer/Enabled") or false
-        ESP.RESP.HeadDot.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/HeadDot/Enabled") or false
-        ESP.RESP.Arrow.Left.Visible = ArrowVisible and GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Enabled") or false
-        ESP.RESP.Arrow.Right.Visible = ArrowVisible and GetFlag(ESP.Flags,ESP.Flag,"/Arrow/Enabled") or false
-        ESP.RESP.Box.HealthBar.Visible = ESP.RESP.Box.Visible and GetFlag(ESP.Flags,ESP.Flag,"/Box/HealthBar") and not ESP.Target.BoxTooSmall or false
-
-        ESP.RESP.Box.TextLists.Top.Title.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Name/Enabled") or false
-        ESP.RESP.Box.TextLists.Left.Health.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Health/Enabled") or false
-        ESP.RESP.Box.TextLists.Bottom.Distance.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Distance/Enabled") or false
-        ESP.RESP.Box.TextLists.Right.Weapon.Visible = Visible and GetFlag(ESP.Flags,ESP.Flag,"/Weapon/Enabled") or false
+        
+        ESP.RESP.Box.Visible = Visible and GetFlag(ESP.Flags, ESP.Flag, "/Box/Enabled") or false
+        ESP.RESP.Tracer.Visible = Visible and GetFlag(ESP.Flags, ESP.Flag, "/Tracer/Enabled") or false
+        ESP.RESP.HeadDot.Visible = Visible and GetFlag(ESP.Flags, ESP.Flag, "/HeadDot/Enabled") or false
+        ESP.RESP.Arrow.Left.Visible = ArrowVisible and GetFlag(ESP.Flags, ESP.Flag, "/Arrow/Enabled") or false
+        ESP.RESP.Arrow.Right.Visible = ArrowVisible and GetFlag(ESP.Flags, ESP.Flag, "/Arrow/Enabled") or false
+        ESP.RESP.Box.HealthBar.Visible = ESP.RESP.Box.Visible and GetFlag(ESP.Flags, ESP.Flag, "/Box/HealthBar") and not ESP.Target.BoxTooSmall or false
+        ESP.RESP.Box.TextLists.Top.Title.Visible = Visible and GetFlag(ESP.Flags, ESP.Flag, "/Name/Enabled") or false
+        ESP.RESP.Box.TextLists.Left.Health.Visible = Visible and GetFlag(ESP.Flags, ESP.Flag, "/Health/Enabled") or false
+        ESP.RESP.Box.TextLists.Bottom.Distance.Visible = Visible and GetFlag(ESP.Flags, ESP.Flag, "/Distance/Enabled") or false
+        ESP.RESP.Box.TextLists.Right.Weapon.Visible = Visible and GetFlag(ESP.Flags, ESP.Flag, "/Weapon/Enabled") or false
     end
 end)
 
